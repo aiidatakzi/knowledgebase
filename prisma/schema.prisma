@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  filename  String
+  filePath  String   @unique
+  fileType  String   // md, pdf, docx
+  title     String?
+  content   String   // full extracted text
+  source    String?  // claude, chatgpt, gemini, etc.
+  wordCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  indexedAt DateTime?
+
+  keywords DocumentKeyword[]
+  chunks   Chunk[]
+}
+
+model Chunk {
+  id         String   @id @default(uuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String   // chunk of text (~500 tokens)
+  embedding  String?  // JSON array of embedding vector (stored as text)
+  index      Int      // chunk order within document
+
+  @@index([documentId])
+}
+
+model Keyword {
+  id        String   @id @default(uuid())
+  word      String   @unique
+  stem      String   // stemmed form for matching
+  tfidf     Float?   // global TF-IDF score
+  count     Int      @default(0) // total occurrences across all docs
+  createdAt DateTime @default(now())
+
+  documents        DocumentKeyword[]
+  sourceEdges      KeywordEdge[]     @relation("SourceKeyword")
+  targetEdges      KeywordEdge[]     @relation("TargetKeyword")
+}
+
+model DocumentKeyword {
+  id         String   @id @default(uuid())
+  documentId String
+  keywordId  String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  keyword    Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  score      Float    // TF-IDF score within this document
+  count      Int      // occurrences within this document
+
+  @@unique([documentId, keywordId])
+  @@index([documentId])
+  @@index([keywordId])
+}
+
+model KeywordEdge {
+  id       String  @id @default(uuid())
+  sourceId String  // keyword A
+  targetId String  // keyword B
+  weight   Float   // co-occurrence strength
+  source   Keyword @relation("SourceKeyword", fields: [sourceId], references: [id], onDelete: Cascade)
+  target   Keyword @relation("TargetKeyword", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId])
+  @@index([sourceId])
+  @@index([targetId])
+}
