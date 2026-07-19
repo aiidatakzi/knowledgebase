@@ -82,32 +82,53 @@ function calculateTfIdf(
  * Main indexing function: parses a file, extracts keywords, and stores everything.
  */
 export async function indexFile(filePath: string): Promise<string> {
-  // 1. Parse the file
   const parsed = await parseFile(filePath);
-  const source = parsed.source || detectSource(parsed.content, filePath);
+  return indexContent(filePath, parsed);
+}
 
-  // 2. Check if document already exists (update) or create new
+/**
+ * Index in-memory content (for LLM imports and other non-file sources).
+ * Uses a virtual file path derived from the title.
+ */
+export async function indexContent(
+  virtualPath: string,
+  parsed: import('@/types').ParsedDocument & {
+    model?: string;
+    messageCount?: number;
+  },
+): Promise<string> {
+  const source = parsed.source || detectSource(parsed.content, virtualPath);
+
+  // Check if document already exists (update) or create new
   const existing = await prisma.document.findUnique({
-    where: { filePath },
+    where: { filePath: virtualPath },
   });
 
   const document = await prisma.document.upsert({
-    where: { filePath },
+    where: { filePath: virtualPath },
     create: {
-      filename: filePath.split('/').pop() || filePath,
-      filePath,
+      filename: virtualPath.split('/').pop() || virtualPath,
+      filePath: virtualPath,
       fileType: parsed.fileType,
       title: parsed.title,
       content: parsed.content,
       source,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      model: (parsed as any).model || null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      messageCount: (parsed as any).messageCount || 0,
       wordCount: parsed.content.split(/\s+/).length,
     },
     update: {
-      filename: filePath.split('/').pop() || filePath,
+      filename: virtualPath.split('/').pop() || virtualPath,
       fileType: parsed.fileType,
       title: parsed.title,
       content: parsed.content,
       source,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      model: (parsed as any).model || null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      messageCount: (parsed as any).messageCount || 0,
       wordCount: parsed.content.split(/\s+/).length,
       updatedAt: new Date(),
     },

@@ -6,6 +6,7 @@ import DocumentList from '@/components/DocumentList';
 import StatsPanel from '@/components/StatsPanel';
 import KeywordCloud from '@/components/KeywordCloud';
 import FileDropZone from '@/components/FileDropZone';
+import Link from 'next/link';
 
 interface Doc {
   id: string;
@@ -194,6 +195,26 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <FileDropZone onFilesDropped={handleFilesDropped} uploading={uploading} />
+
+            {/* Quick import LLM card */}
+            <Link
+              href="/import"
+              className="block p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 hover:bg-indigo-500/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📥</span>
+                <div>
+                  <h3 className="font-medium text-indigo-300">
+                    Import LLM Chat History
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    Directly import conversations from ChatGPT, Claude, or Gemini exports
+                  </p>
+                </div>
+                <span className="ml-auto text-indigo-400">→</span>
+              </div>
+            </Link>
+
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-200">Recent Documents</h3>

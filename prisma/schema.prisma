@@ -11,17 +11,19 @@ datasource db {
 }
 
 model Document {
-  id        String   @id @default(uuid())
-  filename  String
-  filePath  String   @unique
-  fileType  String   // md, pdf, docx
-  title     String?
-  content   String   // full extracted text
-  source    String?  // claude, chatgpt, gemini, etc.
-  wordCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  indexedAt DateTime?
+  id           String   @id @default(uuid())
+  filename     String
+  filePath     String   @unique
+  fileType     String   // md, pdf, docx
+  title        String?
+  content      String   // full extracted text
+  source       String?  // claude, chatgpt, gemini, etc.
+  model        String?  // specific model name (gpt-4, claude-sonnet-4-5, gemini-1.5-pro)
+  messageCount Int      @default(0) // number of chat messages (0 for regular documents)
+  wordCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  indexedAt    DateTime?
 
   keywords DocumentKeyword[]
   chunks   Chunk[]

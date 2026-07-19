@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: '◉' },
   { href: '/browse', label: 'Browse', icon: '☰' },
   { href: '/graph', label: 'Graph', icon: '⬡' },
+  { href: '/import', label: 'Import LLM', icon: '📥' },
 ];
 
 export default function Sidebar() {
